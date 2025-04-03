@@ -22,4 +22,4 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 
 ![./002_dll_loaders/standard_syscall_loadlibrary/results.png]
 
-
+![syscall results](./002_dll_loaders/standard_syscall_loadlibrary/results.png)
