@@ -20,4 +20,6 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 
 3. **Calling functions** - `syscall.Syscall()` executes the function at the address located in #2. It also marshals Go values into the format the C/C++ function expects, and converts return values back to Go.
 
-![[./002_dll_loaders/standard_syscall_loadlibrary/results.png]]
+![./002_dll_loaders/standard_syscall_loadlibrary/results.png]
+
+
