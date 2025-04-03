@@ -14,10 +14,8 @@ extern "C" {
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            // NOTE: This path C:\temp\... is relative to the TARGET Windows machine
-            // Ensure C:\temp exists and has write permissions *on the Windows machine* where the DLL will run.
-            FILE* f = fopen("C:\\temp\\testdll_loaded.txt", "w");
+        case DLL_PROCESS_ATTACH:.
+            FILE* f = fopen("C:\\Windows\\Temp\\testdll_loaded.txt", "w");
             if (f) {
                 fprintf(f, "TestDLL loaded at address: %p\n", hinstDLL);
                 fclose(f);
