@@ -33,6 +33,24 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 
 - The most significant difference is timing - lazy loading defers all the actual DLL loading operations until the first function call, making the loading process invisible until functionality is actually used.
 - This creates a smaller initial footprint and delays telltale API calls that might trigger security monitoring systems.
+- Unlike standard loading, no explicit FreeLibrary call is needed since the Go runtime manages the lifecycle of the lazily loaded DLL, which gets unloaded when the program terminates.
 
 ==binary is approx 2.2MB==
-![syscall results](./lazyloading/results.png)
+![lazyloader results](./lazyloading/results.png)
+
+
+## mustloading
+
+1. **Immediate Forceful Loading** - `syscall.MustLoadDLL()` loads the DLL immediately into the process memory and panics if loading fails for any reason. 
+
+2. **Non-Negotiable Function Resolution** - `dll.MustFindProc()` likewise demands that the function exists in the DLL, panicking if it can't be found rather than returning an error, ensuring all expected functionality is available.
+
+3. **Function Calling** - `proc.Call()` works the same way as in other methods, executing the function with the provided parameters and returning results and error information.
+
+4. **Explicit Cleanup Required** - `defer dll.Release()` must be called to properly unload the DLL when finished, similar to standard loading but unlike lazy loading.
+
+- The defining characteristic of must loading is its uncompromising approach—it either works completely or fails immediately with a panic, making no attempt to handle missing dependencies gracefully. 
+- This creates a binary success/failure outcome that leaves little room for stealth when things go wrong.
+
+![mustloader results](./mustloading/results.png)
+
