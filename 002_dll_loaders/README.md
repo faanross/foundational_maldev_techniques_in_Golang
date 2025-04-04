@@ -12,15 +12,14 @@ x86_64-w64-mingw32-g++ testdll.cpp -o testdll.dll -shared -static-libgcc -static
 
 ## standard_syscall_loadlibrary
 
-This is the most direct method using `syscall` library, maps closely to the Windows API.
-
 1. **Loading the DLL** - `syscall.LoadLibrary()` loads DLL code into our process's memory space. 
 
 2. **Finding function addresses** - `syscall.GetProcAddress()` locates specific functions inside the loaded DLL by name, giving us a memory address (pointer) that we can then call.
 
 3. **Calling functions** - `syscall.Syscall()` executes the function at the address located in #2. It also marshals Go values into the format the C/C++ function expects, and converts return values back to Go.
 
-==binary is approx 2.2MB==
+This is the most direct method using `syscall` library, maps closely to the Windows API.
+
 ![syscall results](./standard_syscall_loadlibrary/results.png)
 
 ## lazyloading
@@ -35,7 +34,6 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 - This creates a smaller initial footprint and delays telltale API calls that might trigger security monitoring systems.
 - Unlike standard loading, no explicit FreeLibrary call is needed since the Go runtime manages the lifecycle of the lazily loaded DLL, which gets unloaded when the program terminates.
 
-==binary is approx 2.2MB==
 ![lazyloader results](./lazyloading/results.png)
 
 
@@ -53,4 +51,21 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 - This creates a binary success/failure outcome that leaves little room for stealth when things go wrong.
 
 ![mustloader results](./mustloading/results.png)
+
+
+## flags_w_loadlibraryex
+
+Using 3 different `LoadLibraryEx` flags to load DLLs in different ways:
+1. Standard execution mode, 
+- Functionally equivalent to using `LoadLibrary`.
+- But operating directly on the memory addresses rather than through a library abstraction.
+
+2. As a datafile with `LOAD_LIBRARY_AS_DATAFILE`,  
+- Maps the DLL as a data file, not as an executable. 
+- The system doesn't prepare the DLL for execution - it's just a block of read-only memory.
+
+3. With delayed dependency resolution (`DONT_RESOLVE_DLL_REFERENCES`).
+- Prevents the loader from loading dependent DLLs and calling DllMain. 
+- Creates a "shallow" load where the DLL itself is mapped but not fully initialized.
+- Useful when you want to inspect a DLL's exports without triggering its initialization code.
 
