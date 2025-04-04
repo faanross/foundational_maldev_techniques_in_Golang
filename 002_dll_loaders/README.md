@@ -69,3 +69,15 @@ Using 3 different `LoadLibraryEx` flags to load DLLs in different ways:
 - Creates a "shallow" load where the DLL itself is mapped but not fully initialized.
 - Useful when you want to inspect a DLL's exports without triggering its initialization code.
 
+![loadlibraryex results](./flags_w_loadlibraryex/results.png)
+✅ Standard loading executed as is expected
+
+⚠️ The code expected to NOT be able to find the function address when loading with LOAD_LIBRARY_AS_DATAFILE, but it actually could
+- LOAD_LIBRARY_AS_DATAFILE doesn't prevent access to the export table (the list of functions)
+- You can still find function addresses with GetProcAddress
+- However, trying to actually call those functions would likely fail (your code didn't attempt this)
+
+✅ DONT_RESOLVE_DLL_REFERENCES -> confirms the flag correctly prevented the DLL's initialization code from running.
+
+
+
