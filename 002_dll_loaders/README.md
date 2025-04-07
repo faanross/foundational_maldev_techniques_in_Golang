@@ -9,9 +9,10 @@ To compile on mac for win
 x86_64-w64-mingw32-g++ testdll.cpp -o testdll.dll -shared -static-libgcc -static-libstdc++ -luser32
 ```
 
-## test_dll_generator
+## test_dll_shellcode_generator
 - Simple dll (`test_dll_calc.cpp`) that executes calc.exe on Windows x64 system
 - Thus PoC for executing arbitrary code
+- Same compilation as above, just substitute names as is appropriate
 
 
 ## standard_syscall_loadlibrary
@@ -25,6 +26,7 @@ x86_64-w64-mingw32-g++ testdll.cpp -o testdll.dll -shared -static-libgcc -static
 This is the most direct method using `syscall` library, maps closely to the Windows API.
 
 ![syscall results](./standard_syscall_loadlibrary/results.png)
+
 
 ## lazyloading + lazyloading_shell
 

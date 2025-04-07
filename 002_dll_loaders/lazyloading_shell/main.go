@@ -45,12 +45,16 @@ func lazyLoading(dllPath string) {
 	fmt.Println("Getting LaunchCalc function pointer...")
 	launchCalcProc := dll.NewProc("LaunchCalc")
 
-	fmt.Println("Explicitly calling LaunchCalc to execute shellcode...")
+	//fmt.Println("Explicitly calling LaunchCalc to execute shellcode...")
 	r1, _, lastErr := launchCalcProc.Call()
 
-	// Check result
+	// Check result, NOTE here !0 is success, inverse of "normal Go"
 	fmt.Printf("LaunchCalc returned: %d (non-zero means success)\n", r1)
-	fmt.Printf("Error status: %v\n", lastErr)
+	if r1 != 0 {
+		fmt.Println("Shellcode executed successfully!")
+	} else {
+		fmt.Printf("ERROR: Shellcode execution failed: %v\n", lastErr)
+	}
 
 	// Finally check if we can still access the DLL
 	fmt.Println("Checking if DLL is still accessible by getting AddNumbers function...")
