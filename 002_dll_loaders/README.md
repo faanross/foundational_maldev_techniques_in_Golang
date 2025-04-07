@@ -9,6 +9,10 @@ To compile on mac for win
 x86_64-w64-mingw32-g++ testdll.cpp -o testdll.dll -shared -static-libgcc -static-libstdc++ -luser32
 ```
 
+## test_dll_generator
+- Simple dll (`test_dll_calc.cpp`) that executes calc.exe on Windows x64 system
+- Thus PoC for executing arbitrary code
+
 
 ## standard_syscall_loadlibrary
 
@@ -22,7 +26,7 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 
 ![syscall results](./standard_syscall_loadlibrary/results.png)
 
-## lazyloading
+## lazyloading + lazyloading_shell
 
 1. **Creating a Reference** - `syscall.NewLazyDLL()` doesn't actually load the DLL immediately, but instead creates a reference that will be resolved later. This is a key difference - no LoadLibrary call happens at this point.
 
@@ -75,7 +79,7 @@ Using 3 different `LoadLibraryEx` flags to load DLLs in different ways:
 ⚠️ The code expected to NOT be able to find the function address when loading with LOAD_LIBRARY_AS_DATAFILE, but it actually could
 - LOAD_LIBRARY_AS_DATAFILE doesn't prevent access to the export table (the list of functions)
 - You can still find function addresses with GetProcAddress
-- However, trying to actually call those functions would likely fail (your code didn't attempt this)
+- However, trying to actually call those functions would likely fail (code didn't attempt this)
 
 ✅ DONT_RESOLVE_DLL_REFERENCES -> confirms the flag correctly prevented the DLL's initialization code from running.
 
