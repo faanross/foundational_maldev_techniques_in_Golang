@@ -13,7 +13,6 @@ func main() {
 	// Check if DLL path was provided as command-line argument
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: dllloader.exe <path_to_dll>")
-		fmt.Println("Example: dllloader.exe C:\\temp\\testdll.dll")
 		os.Exit(1)
 	}
 
@@ -32,24 +31,17 @@ func mustLoading(dllPath string) {
 	defer dll.Release()
 
 	// This will panic if the proc cannot be found
-	testProc := dll.MustFindProc("TestFunction")
+	launchCalc := dll.MustFindProc("LaunchCalc")
 
 	// Call the function
-	r1, r2, lastErr := testProc.Call()
-	if lastErr != syscall.Errno(0) && lastErr.(syscall.Errno) != 0 {
-		fmt.Printf("Error calling function: %v\n", lastErr)
-		return
+	r1, _, lastErr := launchCalc.Call()
+
+	// Check result, NOTE here !0 is success, inverse of "normal Go"
+	fmt.Printf("LaunchCalc returned: %d (non-zero means success)\n", r1)
+	if r1 != 0 {
+		fmt.Println("Shellcode executed successfully!")
+	} else {
+		fmt.Printf("ERROR: Shellcode execution failed: %v\n", lastErr)
 	}
 
-	fmt.Printf("Function called successfully. Returns: %d, %d\n", r1, r2)
-
-	addProc := dll.MustFindProc("AddNumbers")
-	a, b := 15, 25
-	r1, r2, lastErr = addProc.Call(uintptr(a), uintptr(b))
-	if lastErr != syscall.Errno(0) && lastErr.(syscall.Errno) != 0 {
-		fmt.Printf("Error calling AddNumbers: %v\n", lastErr)
-		return
-	}
-
-	fmt.Printf("AddNumbers(%d, %d) = %d\n", a, b, r1)
 }
