@@ -7,14 +7,12 @@ import (
 	"fmt"
 	"os"
 	"syscall"
-	"time"
 )
 
 func main() {
 	// Check if DLL path was provided as command-line argument
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: dllloader.exe <path_to_dll>")
-		fmt.Println("Example: dllloader.exe C:\\temp\\testdll.dll")
 		os.Exit(1)
 	}
 
@@ -34,18 +32,11 @@ func lazyLoading(dllPath string) {
 	fmt.Println("Creating lazy DLL reference...")
 	dll := syscall.NewLazyDLL(dllPath)
 
-	// Just loading the DLL should trigger the shellcode in DllMain
-	fmt.Println("DLL reference created - at this point DllMain should have executed")
-	fmt.Println("If calc.exe does not appear, we'll try explicit invocation...")
-
-	// Small pause to see if the automatic execution worked
-	time.Sleep(1 * time.Second)
-
-	// As a backup, call the exported LaunchCalc function which also executes the shellcode
+	// Call the exported LaunchCalc function which also executes the shellcode
 	fmt.Println("Getting LaunchCalc function pointer...")
 	launchCalcProc := dll.NewProc("LaunchCalc")
 
-	//fmt.Println("Explicitly calling LaunchCalc to execute shellcode...")
+	// Call the function
 	r1, _, lastErr := launchCalcProc.Call()
 
 	// Check result, NOTE here !0 is success, inverse of "normal Go"
@@ -54,16 +45,5 @@ func lazyLoading(dllPath string) {
 		fmt.Println("Shellcode executed successfully!")
 	} else {
 		fmt.Printf("ERROR: Shellcode execution failed: %v\n", lastErr)
-	}
-
-	// Finally check if we can still access the DLL
-	fmt.Println("Checking if DLL is still accessible by getting AddNumbers function...")
-	dll.NewProc("AddNumbers")
-
-	fmt.Println("Shellcode execution test complete")
-
-	// If calculator didn't appear, the shellcode execution failed
-	if r1 == 0 {
-		fmt.Println("WARNING: Shellcode execution appears to have failed!")
 	}
 }

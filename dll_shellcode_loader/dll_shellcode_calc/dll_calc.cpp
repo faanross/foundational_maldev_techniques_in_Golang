@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <stdio.h>
 
 // Reliable x64 Windows shellcode for launching calculator
 unsigned char calc_shellcode[] = {
@@ -14,47 +13,24 @@ unsigned char calc_shellcode[] = {
 
 // Execute shellcode directly (without using a thread)
 BOOL ExecuteShellcode() {
-    // Create diagnostic file
-    FILE* f = fopen("C:\\temp\\shellcode_debug.txt", "w");
-    if (f) {
-        fprintf(f, "Starting shellcode execution...\n");
-    }
 
-    // Allocate memory with execution permissions
+    // Allocate memory with PAGE_EXECUTE_READWRITE
     void* exec_memory = VirtualAlloc(NULL, sizeof(calc_shellcode),
                                    MEM_COMMIT | MEM_RESERVE,
                                    PAGE_EXECUTE_READWRITE);
 
     if (exec_memory == NULL) {
-        if (f) fprintf(f, "Memory allocation failed: %d\n", GetLastError());
-        if (f) fclose(f);
         return FALSE;
     }
 
-    if (f) fprintf(f, "Memory allocated at: %p\n", exec_memory);
-
     // Copy shellcode to executable memory
     RtlCopyMemory(exec_memory, calc_shellcode, sizeof(calc_shellcode));
-    if (f) fprintf(f, "Shellcode copied to memory\n");
-
-    // Execute shellcode using function pointer - direct execution, no thread
-    if (f) {
-        fprintf(f, "About to execute shellcode (%d bytes)...\n", sizeof(calc_shellcode));
-        fclose(f);
-    }
 
     // Create function pointer to shellcode
     void (*shellcode_func)() = (void(*)())exec_memory;
 
-    // Execute the shellcode directly
+    // Execute the shellcode
     shellcode_func();
-
-    // Log completion
-    FILE* f2 = fopen("C:\\temp\\shellcode_completed.txt", "w");
-    if (f2) {
-        fprintf(f2, "Shellcode execution completed\n");
-        fclose(f2);
-    }
 
     // Free memory
     VirtualFree(exec_memory, 0, MEM_RELEASE);
@@ -63,14 +39,6 @@ BOOL ExecuteShellcode() {
 
 // Standard exported functions
 extern "C" {
-    __declspec(dllexport) void TestFunction() {
-        MessageBoxA(NULL, "TestFunction called!", "TestDLL", MB_OK);
-    }
-
-    __declspec(dllexport) int AddNumbers(int a, int b) {
-        return a + b;
-    }
-
     // Explicit function to execute shellcode
     __declspec(dllexport) BOOL LaunchCalc() {
         return ExecuteShellcode();
@@ -79,14 +47,5 @@ extern "C" {
 
 // DLL entry point
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-    if (fdwReason == DLL_PROCESS_ATTACH) {
-        FILE* f = fopen("C:\\temp\\testdll_loaded.txt", "w");
-        if (f) {
-            fprintf(f, "TestDLL loaded at address: %p\n", hinstDLL);
-            fprintf(f, "DLL_PROCESS_ATTACH triggered, about to run shellcode\n");
-            fclose(f);
-        }
-
-    }
     return TRUE;
 }
