@@ -19,9 +19,6 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 
 
 
-
-
-
 ## lazyloading 
 
 1. **Creating a Reference** - `syscall.NewLazyDLL()` doesn't actually load the DLL immediately, but instead creates a reference that will be resolved later. This is a key difference - no LoadLibrary call happens at this point.
@@ -34,7 +31,6 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 - This creates a smaller initial footprint and delays telltale API calls that might trigger security monitoring systems.
 - Unlike standard loading, no explicit FreeLibrary call is needed since the Go runtime manages the lifecycle of the lazily loaded DLL, which gets unloaded when the program terminates.
 
-![lazyloader results](../../dll_shellcode_loader/lazyloading/results.png)
 
 
 ## mustloading
@@ -49,8 +45,6 @@ This is the most direct method using `syscall` library, maps closely to the Wind
 
 - The defining characteristic of must loading is its uncompromising approach—it either works completely or fails immediately with a panic, making no attempt to handle missing dependencies gracefully.
 - This creates a binary success/failure outcome that leaves little room for stealth when things go wrong.
-
-![mustloader results](../../dll_shellcode_loader/mustloading/results.png)
 
 
 ## flags_w_loadlibraryex
@@ -68,16 +62,5 @@ Using 3 different `LoadLibraryEx` flags to load DLLs in different ways:
 - Prevents the loader from loading dependent DLLs and calling DllMain.
 - Creates a "shallow" load where the DLL itself is mapped but not fully initialized.
 - Useful when you want to inspect a DLL's exports without triggering its initialization code.
-
-![loadlibraryex results](../../dll_shellcode_loader/flags_w_loadlibraryex/results.png)
-✅ Standard loading executed as is expected
-
-⚠️ The code expected to NOT be able to find the function address when loading with LOAD_LIBRARY_AS_DATAFILE, but it actually could
-- LOAD_LIBRARY_AS_DATAFILE doesn't prevent access to the export table (the list of functions)
-- You can still find function addresses with GetProcAddress
-- However, trying to actually call those functions would likely fail (code didn't attempt this)
-
-✅ DONT_RESOLVE_DLL_REFERENCES -> confirms the flag correctly prevented the DLL's initialization code from running.
-
 
 
