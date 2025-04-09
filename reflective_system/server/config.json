@@ -2,7 +2,7 @@
   "payload_path": "./payload.bin",
   "cert_path": "./certs/server.crt",
   "key_path": "./certs/server.key",
-  "listen_addr": "127.0.0.1:443",
+  "listen_addr": "192.168.2.124:443",
   "server_root": "www",
   "log_path": "./logs/server.log",
   "verbose": true

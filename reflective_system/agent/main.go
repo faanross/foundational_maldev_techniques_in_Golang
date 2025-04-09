@@ -4,6 +4,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
