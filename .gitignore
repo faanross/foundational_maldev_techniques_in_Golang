@@ -1,6 +1,5 @@
 # Binary files
 bin/
-*.exe
 *.exe~
 *.dll
 *.so
@@ -32,3 +31,6 @@ Icon
 ._*
 .Spotlight-V100
 .Trashes
+
+*.exe
+reflective_system/server/certs/

