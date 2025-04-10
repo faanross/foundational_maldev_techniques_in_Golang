@@ -6,6 +6,11 @@
 x86_64-w64-mingw32-g++ dll_calc.cpp -o dll_calc.dll -shared -static-libgcc -static-libstdc++ -luser32
 ```
 
+- Can also compile directly from go using CGO (`dll_calc_go.go`)
+```shell
+GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go build -buildmode=c-shared -o dll_calc_go.dll dll_calc_go.go
+```
+
 
 ## syscall_loadlibrary
 
